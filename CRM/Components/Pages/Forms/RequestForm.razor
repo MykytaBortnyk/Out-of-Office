@@ -1,0 +1,100 @@
+﻿@page "/request/"
+@inject IRepository _repository
+@inject ILogger<RequestForm> _logger
+@inject NavigationManager Navigation
+@inject IDialogService DialogService
+
+<PageTitle>Request</PageTitle>
+
+<h3>Request</h3>
+
+<FluentWizard Border="WizardBorder.Inside"
+              OnFinish="@OnFinishedSubmitAsync"
+              StepSequence="WizardStepSequence.Visited">
+    <Steps>
+        <FluentWizardStep Label="Select an employee:">
+            <FluentSelect Items="@employees"
+                          @bind-SelectedOption="@request.Employee">
+                <OptionTemplate>
+                    @($"Id: {context.Id}, {context.FullName}, {context.Position.GetDisplayName()}")
+                </OptionTemplate>                
+            </FluentSelect>
+        </FluentWizardStep>
+        <FluentWizardStep Label="Select a reason:">
+            <FluentSelect Items="@reasonOptions"
+                          @bind-SelectedOption="@selectedReason"
+                          OptionText="(i => i.Text)" 
+                          />
+        </FluentWizardStep>
+        <FluentWizardStep Label="Choose a start day:">
+            <FluentDatePicker @bind-Value="@request.StartDate" />
+        </FluentWizardStep>
+        <FluentWizardStep Label="Choose a last day:">
+            <FluentDatePicker @bind-Value="@request.EndDate" />
+        </FluentWizardStep>
+        <FluentWizardStep Label="Leave a comment (optional):">
+            <FluentTextArea @bind-Value="@request.Comment"
+                            Rows="8"
+                            Placeholder="Your comment here..."
+                            style="width: 100%;" />
+        </FluentWizardStep>
+        <FluentWizardStep Label="Summary:">
+            <FluentEditForm Model="request">
+                <FluentStack Orientation="Orientation.Vertical">
+                    <FluentLabel Typo="Typography.H4">Summary:</FluentLabel>
+                    <p>By: @(request.Employee)</p>
+                    <p>Reason: @(request.Reason.GetDisplayName())</p>
+                    <p>From: @(request.StartDate)</p>
+                    <p>To: @(request.EndDate)</p>
+                    @if(!String.IsNullOrEmpty(request.Comment))
+                    {
+                        <p>Comment: @(request.Comment)</p>
+                    }
+                    <DataAnnotationsValidator />
+                    <FluentValidationSummary />
+                </FluentStack>
+            </FluentEditForm>
+        </FluentWizardStep>
+    </Steps>
+</FluentWizard>
+
+@code {
+    [Parameter] public int Id { get; set; }
+    private List<Employee> employees = new();
+    private LeaveRequest request = new();
+
+    protected override async Task OnInitializedAsync() =>
+        employees = await _repository.Get<Employee>(AsNoTracking: true).ToListAsync();
+
+    private async Task OnFinishedSubmitAsync()
+    {
+        request.StartDate = request.StartDate!.Value.ToUniversalTime();
+        request.EndDate = request.EndDate!.Value.ToUniversalTime();
+        request.Reason = selectedReason.Value;
+        try
+        {
+            _repository.Add<LeaveRequest>(request);
+            _repository.Save();
+            _logger.LogInformation($"Leace request added: Id: {request.Id} for user {request.Employee!.Id}");
+            var dialog = await DialogService.ShowSuccessAsync("Done! Request will be listed at Leave Requests page. You will be redirected from this page.");
+            var result = await dialog.Result;
+            if (result is not null)
+            {
+                Navigation.NavigateTo("leave-requests");
+            }
+        }
+        catch (Exception e)
+        {
+            _logger.LogError($"An exception occured while saving the request: {e.Message}");
+            await DialogService.ShowErrorAsync($"An error occured while saving the request: {e.Message}");
+        }
+    }
+
+    private Option<AbsenceReason> selectedReason;
+    private static List<Option<AbsenceReason>> reasonOptions = new()
+    {
+        { new Option<AbsenceReason> { Value = AbsenceReason.HealthIssue, Text = AbsenceReason.HealthIssue.GetDisplayName() } },
+        { new Option<AbsenceReason> { Value = AbsenceReason.Vacation, Text = AbsenceReason.Vacation.GetDisplayName() } },
+        { new Option<AbsenceReason> { Value = AbsenceReason.FamilyEmergancy, Text = AbsenceReason.FamilyEmergancy.GetDisplayName() } },
+    };
+}

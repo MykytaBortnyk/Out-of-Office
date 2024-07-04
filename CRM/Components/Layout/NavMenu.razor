@@ -1,0 +1,18 @@
+﻿<div class="navmenu">
+    @*<FluentDesignTheme @bind-Mode="@Mode" @bind-OfficeColor="@OfficeColor" StorageName="theme" />*@
+    <input type="checkbox" title="Menu expand/collapse toggle" id="navmenu-toggle" class="navmenu-icon" />
+    <label for="navmenu-toggle" class="navmenu-icon"><FluentIcon Value="@(new Icons.Regular.Size20.Navigation())" Color="Color.Fill" /></label>
+    <nav class="sitenav" aria-labelledby="main-menu">
+        <FluentNavMenu Id="main-menu" Collapsible="true" Width="250" Title="Navigation menu" @bind-Expanded="expanded" CustomToggle="true">
+            <FluentNavLink Href="/" Match="NavLinkMatch.All" Icon="@(new Icons.Regular.Size20.Home())" IconColor="Color.Accent">Home</FluentNavLink>
+            <FluentNavLink Href="/employees" Icon="@(new Icons.Regular.Size20.PeopleCommunity())" IconColor="Color.Accent">Employees</FluentNavLink>
+            <FluentNavLink Href="/projects" Icon="@(new Icons.Regular.Size20.ClipboardTextEdit())" IconColor="Color.Accent">Projects</FluentNavLink>
+            <FluentNavLink Href="/leave-requests" Icon="@(new Icons.Regular.Size20.CalendarClock())" IconColor="Color.Accent">Leave Requests</FluentNavLink>
+            <FluentNavLink Href="/approval-requests" Icon="@(new Icons.Regular.Size20.CalendarCheckmark())" IconColor="Color.Accent">Approval Requests</FluentNavLink>
+        </FluentNavMenu>
+    </nav>
+</div>
+
+@code {
+    private bool expanded = true;
+}

@@ -1,0 +1,39 @@
+﻿@page "/"
+
+<PageTitle>Home</PageTitle>
+
+<h1>Out of Office Human Manager!</h1>
+
+<h4>What are we going to do with our meatbags?</h4>
+<FluentGrid>
+    <FluentGridItem xs="12" sm="3">
+        <a href="/employee/" class="home-card">
+            <FluentCard>
+                <FluentIcon Value="@(new Icons.Regular.Size32.PersonAdd())" />
+                <FluentLabel>
+                    Create a new Employee
+                </FluentLabel>
+            </FluentCard>
+        </a>
+    </FluentGridItem>
+    <FluentGridItem xs="12" sm="3">
+        <a href="/project/" class="home-card">
+            <FluentCard>
+                <FluentIcon Value="@(new Icons.Regular.Size32.ClipboardTextEdit())" />
+                <FluentLabel>
+                    Add a new Project
+                </FluentLabel>
+            </FluentCard>
+        </a>
+    </FluentGridItem>
+    <FluentGridItem xs="12" sm="3">
+        <a href="/request/" class="home-card">
+            <FluentCard>
+                <FluentIcon Value="@(new Icons.Regular.Size32.PersonFeedback())" />
+                <FluentLabel>
+                    Make a Leave Request
+                </FluentLabel>
+            </FluentCard>
+        </a>
+    </FluentGridItem>
+</FluentGrid>

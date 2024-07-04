@@ -1,0 +1,153 @@
+﻿@page "/leave-requests"
+@using Microsoft.EntityFrameworkCore;
+@using System.Linq.Expressions;
+@using System.Globalization;
+@inject IRepository _repository;
+@inject IDialogService DialogService;
+@inject ILogger<LeaveRequest> _logger;
+
+
+<PageTitle>Leave Requests</PageTitle>
+
+<FluentStack Orientation="Orientation.Vertical">
+    <h3>Leave Request</h3>
+    <FluentAnchor Href="/request"
+                  IconStart="@(new Icons.Regular.Size20.CalendarEdit().WithColor(Color.Lightweight))"
+                  Appearance="Appearance.Accent">
+        Make a request
+    </FluentAnchor>
+    <FluentDataGrid Items="@FilteredItems"
+                    ResizableColumns="true"
+                    Pagination="@pagination"
+                    TGridItem="LeaveRequest">
+        <PropertyColumn Property="@(p => p.Id)"
+                        Sortable="true"
+                        IsDefaultSortColumn=true />
+        <PropertyColumn Property="@(p => p.Employee)">
+            <ColumnOptions>
+                <div class="search-box">
+                    <FluentSearch Autofocus="true"
+                                  @bind-Value=nameFilter
+                                  @oninput="HandleNameFilter"
+                                  @bind-Value:after=HandleClear
+                                  Placeholder="Filter By Name" />
+                </div>
+            </ColumnOptions>
+        </PropertyColumn>
+        <PropertyColumn Property="@(p => p.Reason.GetDisplayName())" Sortable="true" />
+        <PropertyColumn Property="@(p => p.StartDate.Value.ToString("dd MMMM yyyy", CultureInfo.CreateSpecificCulture("en-UK")))"
+                        Title="Start date"
+                        Sortable="true" />
+        <PropertyColumn Property="@(p => p.EndDate.Value.ToString("dd MMMM yyyy", CultureInfo.CreateSpecificCulture("en-UK")))"
+                        Title="End date"
+                        Sortable="true" />
+        <PropertyColumn Property="@(p => p.Comment)"
+                        Sortable="true"
+                        Class="multiline-text" />
+        <PropertyColumn Property="@(p => p.Status)"
+                        Sortable="true">
+            <ColumnOptions>
+                <div class="search-box">
+                    <FluentSelect TOption="RequestStatus"
+                                  Label="Select status"
+                                  Items="@statusOptions"
+                                  Multiple="false"
+                                  OptionText="@(i => i.GetDisplayName())"
+                                  OptionValue="@(i => i.GetDisplayName())"
+                                  @bind-SelectedOptions="@SelectedStatus" />
+                </div>
+            </ColumnOptions>
+        </PropertyColumn>
+        <TemplateColumn Title="Actions" Align="Align.Center">
+            @if (context.Status == RequestStatus.New)
+            {
+                <FluentButton aria-label="Accept"
+                              IconEnd="@(new Icons.Regular.Size16.Checkmark())"
+                              OnClick="@(() => OnActionClickedAsync(context, RequestStatus.Approve))" />
+                <FluentButton aria-label="Reject"
+                              IconEnd="@(new Icons.Regular.Size16.Dismiss())"
+                              OnClick="@(() => OnActionClickedAsync(context, RequestStatus.Reject))" />
+            }
+        </TemplateColumn>
+    </FluentDataGrid>
+    <FluentPaginator State="@pagination" />
+</FluentStack>
+
+
+@code {
+    private IQueryable<LeaveRequest>? _items => _repository.Get<LeaveRequest>(
+            AsNoTracking: true,
+            IncludeProperties: nameof(LeaveRequest.Employee)
+        );
+    private string nameFilter = string.Empty;
+    private PaginationState pagination = new PaginationState { ItemsPerPage = 10 };
+
+    private IQueryable<LeaveRequest>? FilteredItems =>
+        _items.Where(
+            p => EF.Functions.ILike(p.Employee.FullName.ToString(), $"%{nameFilter}%")
+        );
+
+    private void HandleNameFilter(ChangeEventArgs args)
+    {
+        if (args.Value is string value)
+        {
+            nameFilter = value;
+        }
+    }
+
+    private void HandleClear()
+    {
+        if (string.IsNullOrWhiteSpace(nameFilter))
+        {
+            nameFilter = string.Empty;
+        }
+    }
+
+    private GridSort<T> HandleSort<T>(Expression<Func<T, object>> filter)
+        => GridSort<T>.ByAscending(filter);
+
+    private async Task OnActionClickedAsync(LeaveRequest record, RequestStatus status)
+    {
+        var dialog = await DialogService.ShowDialogAsync<ApprovalDialog>(new DialogParameters()
+            {
+                Title = "Confirm the action",
+                Modal = true,
+                PreventDismissOnOverlayClick = true,
+                PreventScroll = true,
+            });
+
+        var result = await dialog.Result;
+
+        if (!result.Cancelled)
+        {
+            var approval = new ApprovalRequest()
+                {
+                    Status = status,
+                    Comment = result.Data?.ToString(),
+                    LeaveRequest = record,
+                    Approver = record.Employee.Partner
+                };
+            try
+            {
+                record.Status = status;
+                _repository.Update(record);
+                _repository.Add<ApprovalRequest>(approval);
+                _repository.Save();
+                _logger.LogInformation($"Request with an Id: {record.Id} updated status: {record.Status.GetDisplayName()} sucessfully!");
+            }
+            catch (Exception e)
+            {
+                dialog = await DialogService.ShowErrorAsync($"An error occured while updating the record: {e.Message}");
+            }
+        }
+    }
+
+    private IEnumerable<RequestStatus>? SelectedStatus;
+
+    private static List<RequestStatus> statusOptions = new()
+    {
+        { RequestStatus.New },
+        { RequestStatus.Approve },
+        { RequestStatus.Reject},
+    };
+}

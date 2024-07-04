@@ -1,0 +1,116 @@
+﻿@page "/project/{Id:int?}"
+@inject IRepository _repository
+@inject ILogger<RequestForm> _logger
+@inject NavigationManager Navigation
+@inject IDialogService DialogService
+
+<PageTitle>Project</PageTitle>
+<h3>Project</h3>
+
+<FluentOverlay @bind-Visible=@showOVerlay
+               Opacity="0.4"
+               Alignment="@Align.Center"
+               Justification="@JustifyContent.Center">
+    <FluentProgressRing />
+</FluentOverlay>
+<FluentEditForm Model="@project" OnValidSubmit="OnFormSubmitAsync">
+    <div class="form-stack">
+        <DataAnnotationsValidator />
+        <FluentSelect TOption="ProjectType"
+                      Items="@ProjectTypes"
+                      Label="Project type"
+                      @bind-SelectedOption="@project.Type" />
+        <FluentSelect TOption="Status"
+                      Items="@ProjectStatus"
+                      Label="Project Status"
+                      OptionText="@(p => p.GetDisplayName())"
+                      @bind-SelectedOption="@project.Status" />
+        <FluentCalendar SelectMode="CalendarSelectMode.Range"
+                        @bind-SelectedDates="@SelectedDates" />
+        <FluentSelect Items="@managers"
+                      Label="Manager"
+                      @bind-SelectedOption="@project.ProjectManager">
+            <OptionTemplate Context="option_context">
+                @($"Id: {option_context.Id}, {option_context.FullName}")
+            </OptionTemplate>
+        </FluentSelect>
+        <FluentTextArea Placeholder="Leave a comment (Optional)"
+                        @bind-Value="@project.Comment" />
+        <div class="form-buttons">
+            <FluentButton Type="ButtonType.Submit" Appearance="Appearance.Accent">Save</FluentButton>
+            <FluentAnchor Href="/projects/" Appearance="Appearance.Neutral">Cancel</FluentAnchor>
+        </div>
+    </div>
+</FluentEditForm>
+@code {
+    [Parameter] public int? Id { get; set; }
+    private Project project { get; set; } = new();
+    private bool showOVerlay = true;
+    private List<Employee> managers { get; set; } = new();
+    private IEnumerable<DateTime> SelectedDates = new List<DateTime>();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        try
+        {
+            project = await _repository.Get<Project>(p => p.Id == Id).FirstOrDefaultAsync() ?? new();
+            managers = await _repository.Get<Employee>(e => e.Position == Positions.ProjectManager).ToListAsync();
+            SelectedDates = new List<DateTime>() { project.StartDate, project.EndDate };
+        }
+        catch (InvalidOperationException)
+        {
+            Navigation.NavigateTo("/404", true);
+        }
+        showOVerlay = false;
+    }
+
+    private async Task OnFormSubmitAsync()
+    {
+        project.StartDate = SelectedDates.First().ToUniversalTime();
+        project.EndDate = SelectedDates.Last().ToUniversalTime();
+        var dialog = await DialogService.ShowConfirmationAsync("Confirm saving action. Changes cannot be undone.");
+        var result = await dialog.Result;
+        if (!result.Cancelled)
+        {
+            try
+            {
+                if (Id is not null)
+                {
+                    _repository.Update(project);
+                }
+                else
+                {
+                    _repository.Add(project);
+                }
+                _repository.Save();
+                _logger.LogInformation($"Project {project.Id} saved!");
+                result = null;
+                dialog = await DialogService.ShowInfoAsync("Done! You will be redirected back to List.");
+                result = await dialog.Result;
+                if (result is not null)
+                {
+                    Navigation.NavigateTo("/projects/", true);
+                }
+            }
+            catch (Exception e)
+            {
+                _logger.LogError($"An error occured while saving the project with Id: {project.Id}\nerror: {e.Message}");
+                await DialogService.ShowErrorAsync($"An Error occured while saving the project.\nError: {e.Message}");
+            }
+        }
+    }
+
+    private static List<ProjectType> ProjectTypes = new()
+    {
+        { ProjectType.Telecom },
+        { ProjectType.Gambling },
+        { ProjectType.Fintech },
+        { ProjectType.SaaS },
+        { ProjectType.Education },
+    };
+    private static List<Status> ProjectStatus = new()
+    {
+        { Status.Active },
+        { Status.Inactive },
+    };
+}

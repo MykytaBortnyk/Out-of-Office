@@ -1,0 +1,129 @@
+﻿@page "/employee/{Id:int?}"
+@inject IRepository _repository
+@inject ILogger<RequestForm> _logger
+@inject NavigationManager Navigation
+@inject IDialogService DialogService
+
+
+<PageTitle>Employee</PageTitle>
+<h3>Employee</h3>
+
+<FluentOverlay @bind-Visible=@showOVerlay
+               Opacity="0.4"
+               Alignment="@Align.Center"
+               Justification="@JustifyContent.Center">
+    <FluentProgressRing />
+</FluentOverlay>
+
+<FluentEditForm Model="@employee" OnValidSubmit="OnFormSubmitAsync">
+    <div class="form-stack">
+        <DataAnnotationsValidator />
+        <FluentSelect TOption="Names"
+                      Items="@EmpNames"
+                      Label="Full Name"
+                      @bind-SelectedOption="@employee.FullName" />
+        <FluentSelect TOption="Positions"
+                      Items="@EmpPositions"
+                      Label="Position"
+                      @bind-SelectedOption="@employee.Position" />
+        <FluentSelect TOption="Status"
+                      Items="@EmpStatus"
+                      Label="Status"
+                      OptionText="@(p => p.GetDisplayName())"
+                      @bind-SelectedOption="@employee.Status" />
+        <FluentSelect Items="@partners"
+                      Label="Manager"
+                      @bind-SelectedOption="@employee.Partner">
+            <OptionTemplate Context="option_context">
+                @($"Id: {option_context.Id}, {option_context.FullName}")
+            </OptionTemplate>
+        </FluentSelect>
+        <FluentNumberField @bind-Value="employee.Balance" Label="Balance" />
+        <div class="form-buttons">
+            <FluentButton Type="ButtonType.Submit" Appearance="Appearance.Accent">Save</FluentButton>
+            <FluentAnchor Href="/employees/" Appearance="Appearance.Neutral">Cancel</FluentAnchor>
+        </div>
+    </div>
+</FluentEditForm>
+@code {
+    [Parameter] public int? Id { get; set; }
+    private Employee employee { get; set; } = new();
+    private bool showOVerlay = true;
+    private List<Employee> partners { get; set; } = new();
+    private IEnumerable<DateTime> SelectedDates = new List<DateTime>();
+    protected override async Task OnParametersSetAsync()
+    {
+        try
+        {
+            employee = await _repository.Get<Employee>(p => p.Id == Id).FirstOrDefaultAsync() ?? new();
+            partners = await _repository.Get<Employee>(e => e.Position == Positions.HrManager).ToListAsync();
+        }
+        catch (InvalidOperationException)
+        {
+            Navigation.NavigateTo("/404", true);
+        }
+        showOVerlay = false;
+    }
+
+    private async Task OnFormSubmitAsync()
+    {
+        var dialog = await DialogService.ShowConfirmationAsync("Confirm saving action. Changes cannot be undone.");
+        var result = await dialog.Result;
+        if (!result.Cancelled)
+        {
+            try
+            {
+                if (Id is not null)
+                {
+                    _repository.Update(employee);
+                }
+                else
+                {
+                    _repository.Add(employee);
+                }
+                _repository.Save();
+                _logger.LogInformation($"Employee {employee.Id} saved");
+                result = null;
+                dialog = await DialogService.ShowInfoAsync("Done! You will be redirected back to List.");
+                result = await dialog.Result;
+                if (result is not null)
+                {
+                    Navigation.NavigateTo("/employees/", true);
+                }
+            }
+            catch (Exception e)
+            {
+                _logger.LogError($"An error occured while saving am employee with Id: {employee.Id}\nerror: {e.Message}");
+                await DialogService.ShowErrorAsync($"An Error occured while saving the project.\nError: {e.Message}");
+            }
+        }
+    }
+
+    private static List<Subdivision> Subd = new()
+    {
+        { Subdivision.Support },
+        { Subdivision.It },
+        { Subdivision.Smm },
+        { Subdivision.Sales },
+        { Subdivision.HumanResources },
+    };
+    private static List<Status> EmpStatus = new()
+    {
+        { Status.Active },
+        { Status.Inactive },
+    };
+    private static List<Positions> EmpPositions = new()
+    {
+        { Positions.ProjectManager },
+        { Positions.HrManager },
+        { Positions.Administrator },
+        { Positions.Employee },
+    };
+    private static List<Names> EmpNames = new()
+    {
+        { Names.Igor },
+        { Names.Vasyl },
+        { Names.Volodymyr },
+        { Names.Petro },
+    };
+}

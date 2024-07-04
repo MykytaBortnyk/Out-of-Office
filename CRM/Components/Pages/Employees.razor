@@ -1,0 +1,113 @@
+﻿@page "/employees"
+@inject ILogger<Employees> _logger;
+@inject IRepository _repository;
+@inject IDialogService DialogService;
+
+<PageTitle>Employees</PageTitle>
+
+<h3>Employees</h3>
+<FluentAnchor Href="/employee/"
+              IconStart="@(new Icons.Regular.Size20.PersonAdd().WithColor(Color.Lightweight))"
+              Appearance="Appearance.Accent">
+    Add an Employee
+</FluentAnchor>
+<FluentDataGrid Items="@FilteredItems" ResizableColumns="true" Pagination="@pagination" TGridItem="Employee">
+    <PropertyColumn Property="@(p => p.Id)" Sortable="true" />
+    <PropertyColumn Property="@(p => p.FullName)" Sortable="true" Filtered="!string.IsNullOrWhiteSpace(nameFilter)" SortBy="@(HandleSort<Employee>(p => p.FullName))" Title="Full Name">
+        <ColumnOptions>
+            <div class="search-box">
+                <FluentSearch Autofocus="true" @bind-Value=nameFilter @oninput="HandleNameFilter" @bind-Value:after=HandleClear Placeholder="Entry name here" />
+            </div>
+        </ColumnOptions>
+    </PropertyColumn>
+    <PropertyColumn Property="@(p => p.Subdivision.GetDisplayName())" Title="Subdivision" Sortable="true" SortBy="@(HandleSort<Employee>(p => p.Subdivision))">
+        <ColumnOptions>
+            <div class="search-box">
+                <FluentSelect TOption="Subdivision"
+                              Label="Select subdivision"
+                              Items="@subdOptions"
+                              Multiple="false"
+                              OptionText="@(i => i.GetDisplayName())"
+                              OptionValue="@(i => i.GetDisplayName())"
+                              @bind-SelectedOptions="@SelectedSubd" />
+            </div>
+        </ColumnOptions>
+    </PropertyColumn>
+    <PropertyColumn Property="@(p => p.Position.GetDisplayName())" Title="Position" Sortable="true" SortBy="@(HandleSort<Employee>(p => p.Position))" />
+    <PropertyColumn Property="@(p => p.Status.GetDisplayName())" Title="Status" Sortable="true" SortBy="@(HandleSort<Employee>(p => p.Status))" />
+    <PropertyColumn Property="@(p => p.Partner.FullName.GetDisplayName())" Title="Partner" Sortable="true" SortBy="@(HandleSort<Employee>(p => p.Partner.FullName))" />
+    <PropertyColumn Property="@(p => p.Balance)" Title="Balance" Sortable="true" SortBy="@(HandleSort<Employee>(p => p.Balance))" />
+    <TemplateColumn Title="Actions" Align="Align.Center">
+        <FluentAnchor Href="@($"/employee/{context.Id}")"
+                      aria-label="Edit" IconEnd="@(new Icons.Regular.Size16.Edit())" />
+        <FluentButton aria-label="Delete"
+                      OnClick="@(() => OnEmployeeDeleteClicked(context))"
+                      IconEnd="@(new Icons.Regular.Size16.Delete())" />
+    </TemplateColumn>
+</FluentDataGrid>
+
+<FluentPaginator State="@pagination" />
+
+
+@code {
+    private IQueryable<Employee>? _items;
+    private string nameFilter = string.Empty;
+    private PaginationState pagination = new PaginationState { ItemsPerPage = 10 };
+
+    private IQueryable<Employee>? FilteredItems => _items.Where(p => EF.Functions.ILike(p.FullName.ToString(), $"%{nameFilter}%"));
+
+    protected override void OnInitialized() =>
+        _items = _repository.Get<Employee>(AsNoTracking: true);
+
+    private async Task OnEmployeeDeleteClicked(Employee value)
+    {
+        var dialog = await DialogService.ShowConfirmationAsync(
+            "Would you like to delete the employee? Changes cannot be undone."
+        );
+
+        var result = await dialog.Result;
+        if (!result.Cancelled)
+        {
+            try
+            {
+                _repository.Delete<Employee>(value);
+                _repository.Save();
+                _logger.LogInformation($"An employee with Id: {value.Id} has been deleted from the database!");
+            }
+            catch (Exception e)
+            {
+                _logger.LogError($"An error occured while an employee deletion Id: {value.Id}: {e.Message}");
+            }
+        }
+    }
+
+    private void HandleNameFilter(ChangeEventArgs args)
+    {
+        if (args.Value is string value)
+        {
+            nameFilter = value;
+        }
+    }
+
+    private void HandleClear()
+    {
+        if (string.IsNullOrWhiteSpace(nameFilter))
+        {
+            nameFilter = string.Empty;
+        }
+    }
+
+    private GridSort<T> HandleSort<T>(Expression<Func<T, object>> filter)
+        => GridSort<T>.ByAscending(filter);
+
+    private IEnumerable<Subdivision>? SelectedSubd;
+
+    private static List<Subdivision> subdOptions = new()
+    {
+        { Subdivision.HumanResources },
+        { Subdivision.It },
+        { Subdivision.Sales},
+        { Subdivision.Smm},
+        { Subdivision.Support},
+    };
+}

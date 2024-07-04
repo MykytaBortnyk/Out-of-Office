@@ -1,0 +1,96 @@
+﻿@page "/projects"
+@using System.Globalization
+@inject IRepository _repository;
+@inject IDialogService DialogService;
+@inject ILogger<Projects> _logger;
+
+<PageTitle>Projects</PageTitle>
+
+<h3>Projects</h3>
+<FluentAnchor Href="/project/"
+              IconStart="@(new Icons.Regular.Size20.TextBulletListSquareEdit().WithColor(Color.Lightweight))"
+              Appearance="Appearance.Accent">
+    Create a new project
+</FluentAnchor>
+<FluentDataGrid Items="@FilteredItems" ResizableColumns="true" Pagination="@pagination" TGridItem="Project">
+    <PropertyColumn Property="@(p => p.Id)" Sortable="true" IsDefaultSortColumn=true />
+    <PropertyColumn Property="@(p => p.Type.GetDisplayName())" Title="Type" Sortable="true" SortBy="HandleSort<Project>(p => p.Type)" />
+    <PropertyColumn Property="@(p => p.StartDate.ToString("dd MMMM yyyy", CultureInfo.CreateSpecificCulture("en-UK")))" Title="Start date" Sortable="true" />
+    <PropertyColumn Property="@(p => p.EndDate.ToString("dd MMMM yyyy", CultureInfo.CreateSpecificCulture("en-UK")))" Title="End date" Sortable="true" />
+    <PropertyColumn Property="@(p => p.ProjectManager)" Sortable="true" Filtered="!string.IsNullOrWhiteSpace(nameFilter)" SortBy="@(HandleSort<Project>(p => p.ProjectManager.FullName))" Title="Manager">
+        <ColumnOptions>
+            <div class="search-box">
+                <FluentSearch Autofocus="true" @bind-Value=nameFilter @oninput="HandleNameFilter" @bind-Value:after=HandleClear Placeholder="Filter By Name" />
+            </div>
+        </ColumnOptions>
+    </PropertyColumn>
+    <PropertyColumn Property="@(p => p.Status.GetDisplayName())" Title="Status" Sortable="true" SortBy="HandleSort<Project>(p => p.Status)" />
+    <PropertyColumn Property="@(p => p.Comment)" Class="multiline-text" />
+    <TemplateColumn Title="Actions" Align="Align.Center">
+        <FluentAnchor Href="@($"/project/{context.Id}")"
+                      aria-label="Edit"
+                      IconEnd="@(new Icons.Regular.Size16.Edit())" />
+        <FluentButton aria-label="Delete"
+                      OnClick="@(() => OnProjectDeleteClicked(context))"
+                      IconEnd="@(new Icons.Regular.Size16.Delete())" />
+    </TemplateColumn>
+</FluentDataGrid>
+
+<FluentPaginator State="@pagination" />
+
+
+@code {
+    private IQueryable<Project>? _items;
+    private string nameFilter = string.Empty;
+    private PaginationState pagination = new PaginationState { ItemsPerPage = 10 };
+
+    private IQueryable<Project>? FilteredItems => _items.Where(p => EF.Functions.ILike(p.ProjectManager.FullName.ToString(), $"%{nameFilter}%"));
+
+    protected override void OnInitialized() =>
+        _items = _repository.Get<Project>(
+            AsNoTracking: true
+        );
+
+    private async Task OnProjectDeleteClicked(Project value)
+    {
+        var dialog = await DialogService.ShowConfirmationAsync(
+            "Would you like to delete the project? Changes cannot be undone."
+        );
+
+        var result = await dialog.Result;
+        if (!result.Cancelled)
+        {
+            try
+            {
+                _repository.Delete<Project>(value);
+                _repository.Save();
+                _logger.LogInformation($"Project with Id: {value.Id} has been deleted!");
+                await DialogService.ShowInfoAsync("Project has been deleted!");
+            }
+            catch (Exception e)
+            {
+                _logger.LogError($"An exception occured while deleting a project with Id {value.Id}\nError:{e.Message}");
+                await DialogService.ShowInfoAsync($"An error occured while deleting a project\nError:{e.Message}");
+            }
+        }
+    }
+
+    private void HandleNameFilter(ChangeEventArgs args)
+    {
+        if (args.Value is string value)
+        {
+            nameFilter = value;
+        }
+    }
+
+    private void HandleClear()
+    {
+        if (string.IsNullOrWhiteSpace(nameFilter))
+        {
+            nameFilter = string.Empty;
+        }
+    }
+
+    private GridSort<T> HandleSort<T>(Expression<Func<T, object>> filter)
+        => GridSort<T>.ByAscending(filter);
+}
