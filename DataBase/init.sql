@@ -5,26 +5,26 @@ CREATE DATABASE "CRM"
     CONNECTION LIMIT = -1
     IS_TEMPLATE = False;
 
-CREATE TYPE Name AS ENUM ('Vasyl', 'Petro', 'Volodymyr', 'Igor');
-CREATE TYPE Subd AS ENUM ('smm', 'it', 'Support', 'Sales', 'Human Resources');
-CREATE TYPE Positions AS ENUM ('Employee', 'HR Manager', 'Project Manager', 'Administrator');
-CREATE TYPE Status AS ENUM ('Active', 'Inactive');
-CREATE TYPE AbsenceReason AS ENUM ('Vacation', 'Health Issue', 'Family Emergancy');
-CREATE TYPE RequestStatus AS ENUM ('New', 'Approve', 'Reject');
-CREATE TYPE ProjectType AS ENUM ('SaaS', 'Fintech', 'Education', 'Gambling', 'Telecom');
+CREATE TYPE "Names" AS ENUM ('Vasyl', 'Petro', 'Volodymyr', 'Igor');
+CREATE TYPE "Subd" AS ENUM ('smm', 'it', 'Support', 'Sales', 'Human Resources');
+CREATE TYPE "Positions" AS ENUM ('Employee', 'HR Manager', 'Project Manager', 'Administrator');
+CREATE TYPE "Status" AS ENUM ('Active', 'Inactive');
+CREATE TYPE "AbsenceReason" AS ENUM ('Vacation', 'Health Issue', 'Family Emergancy');
+CREATE TYPE "RequestStatus" AS ENUM ('New', 'Approve', 'Reject');
+CREATE TYPE "ProjectType" AS ENUM ('SaaS', 'Fintech', 'Education', 'Gambling', 'Telecom');
 
 CREATE TABLE "Employees" (	
 	"Id" BIGSERIAL primary key,
 	"FullName" "Names" NOT NULL,
 	"Subdivision" "Subd" NOT NULL,
-	"Position" "Positions" NOT NULL,
+	"Position" "Positions" NOT NULL DEFAULT 'Employee' 
 	"Status" "Status" NOT NULL,
 	"PartnerId" int references "Employees"("Id"),
 	"Balance" smallint NOT NULL DEFAULT 28
 );
 -- it's not possible to create first entry with NOT NULL, 
 -- so we have to change the constraint after first entry has been added
-ALTER TABLE Employee ALTER COLUMN PoeplePartner SET NOT NULL
+ALTER TABLE "Employees" ALTER COLUMN "PartnerId" SET NOT NULL
 
 CREATE TABLE "LeaveRequests" (
 	"Id" BIGSERIAL primary key,
