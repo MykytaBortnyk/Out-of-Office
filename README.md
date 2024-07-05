@@ -17,6 +17,7 @@ Requirements: .NET 8, PostgreSQL 16
   <summary>
     DB commands
   </summary>
+  <code>
   
   CREATE DATABASE "CRM"
     WITH
@@ -71,7 +72,7 @@ CREATE TABLE "Projects" (
 	"Comment" text,
 	"Status" "Status" NOT NULL
 );
-
+</code>
 </details>
 
 <h4>Features</h4>
