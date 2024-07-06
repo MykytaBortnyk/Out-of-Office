@@ -5,20 +5,21 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace CRM.Models
 {
+    [Table("Employees")]
     public class Employee
     {
         [Display(Name = "Id")]
         public int Id { get; set; }
         [Required, Display(Name = "Full Name")]
-        public Names FullName { get; set; }
+        public Names FullName { get; set; } = Names.Vasyl;
         [Required, Display(Name = "Subdivision")]
-        public Subdivision Subdivision { get; set; }
+        public Subdivision Subdivision { get; set; } = Subdivision.It;
         [Required, Display(Name = "Position")]
-        public Positions Position { get; set; }
+        public Positions Position { get; set; } = Positions.Employee;
         [Required, Display(Name = "Status")]
-        public Status Status { get; set; }
+        public Status Status { get; set; } = Status.Inactive;
         [Required, Display(Name = "Out-of-Office Balance")]
-        public short Balance { get; set; }
+        public short Balance { get; set; } = 28;
         public int PartnerId { get; set; }
         /// <summary>
         /// Navigation property
