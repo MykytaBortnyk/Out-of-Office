@@ -14,6 +14,12 @@ namespace CRM.Data
         public CrmContext(DbContextOptions<CrmContext> options) : base(options)
         { }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
-        { }
+        {
+            base.OnModelCreating(modelBuilder);
+            modelBuilder.Entity<Project>()
+                .HasMany(e => e.Employees)
+                .WithOne(e => e.Project)
+                .HasForeignKey(k => k.ProjectId).IsRequired(false);
+        }
     }
 }

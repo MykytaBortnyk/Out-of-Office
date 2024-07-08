@@ -25,5 +25,9 @@ namespace CRM.Models
         /// </summary>
         [Required, ForeignKey("ManagerId"), Display(Name = "Project manager")]
         public Employee? ProjectManager { get; set; }
+        /// <summary>
+        /// Navigation Property
+        /// </summary>
+        public ICollection<Employee> Employees { get; set; }
     }
 }

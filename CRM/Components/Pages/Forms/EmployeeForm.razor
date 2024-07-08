@@ -31,11 +31,21 @@
                       Label="Status"
                       OptionText="@(p => p.GetDisplayName())"
                       @bind-SelectedOption="@employee.Status" />
+        <AuthorizeView Roles="Project Manager">
+            <FluentSelect Items="@projects"
+                          Label="Project"
+                          @bind-SelectedOption="employee.Project"
+                          Context="select_context">
+                <OptionTemplate Context="project_context">
+                    @($"Id: {project_context.Id}, {project_context.Type}, {project_context.Status}")
+                </OptionTemplate>
+            </FluentSelect>
+        </AuthorizeView>
         <FluentSelect Items="@partners"
                       Label="Manager"
                       @bind-SelectedOption="@employee.Partner">
-            <OptionTemplate Context="option_context">
-                @($"Id: {option_context.Id}, {option_context.FullName}")
+            <OptionTemplate Context="partner_context">
+                @($"Id: {partner_context.Id}, {partner_context.FullName}")
             </OptionTemplate>
         </FluentSelect>
         <FluentNumberField @bind-Value="employee.Balance" Label="Balance" />
@@ -50,13 +60,15 @@
     private Employee employee { get; set; } = new();
     private bool showOVerlay = true;
     private List<Employee> partners { get; set; } = new();
+    private List<Project> projects { get; set; } = new();
     private IEnumerable<DateTime> SelectedDates = new List<DateTime>();
     protected override async Task OnParametersSetAsync()
     {
         try
         {
-            employee = await _repository.Get<Employee>(p => p.Id == Id).FirstOrDefaultAsync() ?? new();
-            partners = await _repository.Get<Employee>(e => e.Position == Positions.HrManager).ToListAsync();
+            employee = await _repository.Get<Employee>(p => p.Id == Id, null, true).FirstOrDefaultAsync() ?? new();
+            partners = await _repository.Get<Employee>(e => e.Position == Positions.HrManager, null, true).ToListAsync();
+            projects = await _repository.Get<Project>(AsNoTracking: true).ToListAsync();
         }
         catch (InvalidOperationException)
         {

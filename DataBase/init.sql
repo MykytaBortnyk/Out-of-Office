@@ -20,7 +20,9 @@ CREATE TABLE "Employees" (
 	"Position" "Positions" NOT NULL DEFAULT 'Employee' 
 	"Status" "Status" NOT NULL,
 	"PartnerId" int references "Employees"("Id"),
-	"Balance" smallint NOT NULL DEFAULT 28
+	"Balance" smallint NOT NULL DEFAULT 28,
+	"ProjectId" INT,
+	FOREIGN KEY ("ProjectId") REFERENCES "Project"("Id")
 );
 -- it's not possible to create first entry with NOT NULL, 
 -- so we have to change the constraint after first entry has been added

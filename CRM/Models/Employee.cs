@@ -21,11 +21,17 @@ namespace CRM.Models
         [Required, Display(Name = "Out-of-Office Balance")]
         public short Balance { get; set; } = 28;
         public int PartnerId { get; set; }
+        public int ProjectId { get; set; }
         /// <summary>
         /// Navigation property
         /// </summary>
         [Required, ForeignKey("PartnerId"), Display(Name = "People Partner")]
         public Employee? Partner { get; set; }
+        /// <summary>
+        /// Navigation property
+        /// </summary>
+        [ForeignKey("ProjectId")]
+        public Project? Project { get; set; } = default!;
         public override string ToString() => FullName.GetDisplayName();
     }
 }
