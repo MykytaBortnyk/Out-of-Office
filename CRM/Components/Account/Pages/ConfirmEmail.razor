@@ -43,7 +43,9 @@
         {
             var code = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(Code));
             var result = await UserManager.ConfirmEmailAsync(user, code);
-            statusMessage = result.Succeeded ? "Thank you for confirming your email." : "Error confirming your email.";
+            statusMessage = result.Succeeded ? "Thank you for confirming your email. You will be redirected to your profile page." : "Error confirming your email.";
+            await Task.Delay(2500);
+            RedirectManager.RedirectTo($"/employee/{user.Employee.Id}");
         }
     }
 }

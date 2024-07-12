@@ -1,4 +1,6 @@
 ﻿@page "/employee/{Id:int?}"
+@rendermode InteractiveServer
+
 @inject IRepository _repository
 @inject ILogger<RequestForm> _logger
 @inject NavigationManager Navigation
@@ -31,7 +33,7 @@
                       Label="Status"
                       OptionText="@(p => p.GetDisplayName())"
                       @bind-SelectedOption="@employee.Status" />
-        <AuthorizeView Roles="Project Manager">
+        <AuthorizeView Roles="Project Manager" Context="AuthContext">
             <FluentSelect Items="@projects"
                           Label="Project"
                           @bind-SelectedOption="employee.Project"

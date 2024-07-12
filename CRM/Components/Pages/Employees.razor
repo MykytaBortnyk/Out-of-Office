@@ -1,4 +1,6 @@
 ﻿@page "/employees"
+@rendermode InteractiveServer
+
 @inject ILogger<Employees> _logger;
 @inject IRepository _repository;
 @inject IDialogService DialogService;
@@ -20,7 +22,7 @@
             </div>
         </ColumnOptions>
     </PropertyColumn>
-    <PropertyColumn Property="@(p => p.Subdivision.GetDisplayName())" Title="Subdivision" Sortable="true" SortBy="@(HandleSort<Employee>(p => p.Subdivision))">
+    <PropertyColumn Property="@(p => p.Subdivision)" Title="Subdivision" Sortable="true" SortBy="@(HandleSort<Employee>(p => p.Subdivision))">
         <ColumnOptions>
             <div class="search-box">
                 <FluentSelect TOption="Subdivision"
@@ -33,9 +35,9 @@
             </div>
         </ColumnOptions>
     </PropertyColumn>
-    <PropertyColumn Property="@(p => p.Position.GetDisplayName())" Title="Position" Sortable="true" SortBy="@(HandleSort<Employee>(p => p.Position))" />
-    <PropertyColumn Property="@(p => p.Status.GetDisplayName())" Title="Status" Sortable="true" SortBy="@(HandleSort<Employee>(p => p.Status))" />
-    <PropertyColumn Property="@(p => p.Partner.FullName.GetDisplayName())" Title="Partner" Sortable="true" SortBy="@(HandleSort<Employee>(p => p.Partner.FullName))" />
+    <PropertyColumn Property="@(p => p.Position)" Title="Position" Sortable="true" SortBy="@(HandleSort<Employee>(p => p.Position))" />
+    <PropertyColumn Property="@(p => p.Status)" Title="Status" Sortable="true" SortBy="@(HandleSort<Employee>(p => p.Status))" />
+    <PropertyColumn Property="@(p => p.Partner.FullName)" Title="Partner" Sortable="true" SortBy="@(HandleSort<Employee>(p => p.Partner.FullName))" />
     <PropertyColumn Property="@(p => p.Balance)" Title="Balance" Sortable="true" SortBy="@(HandleSort<Employee>(p => p.Balance))" />
     <TemplateColumn Title="Actions" Align="Align.Center">
         <FluentAnchor Href="@($"/employee/{context.Id}")"

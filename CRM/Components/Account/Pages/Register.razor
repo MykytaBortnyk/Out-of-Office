@@ -6,7 +6,6 @@
 @using CRM.Models.Identity
 @using Microsoft.AspNetCore.Identity
 @using Microsoft.AspNetCore.WebUtilities
-@using CRM.Data
 
 @inject UserManager<ApplicationUser> UserManager
 @inject IUserStore<ApplicationUser> UserStore
@@ -15,7 +14,6 @@
 @inject ILogger<Register> Logger
 @inject NavigationManager NavigationManager
 @inject IdentityRedirectManager RedirectManager
-@inject IRepository _repository
 
 <PageTitle>Register</PageTitle>
 
@@ -30,12 +28,12 @@
             <hr />
             <FluentValidationSummary class="text-danger" role="alert" />
             <FluentStack Orientation="Orientation.Vertical">
-                <FluentSelect
-                              Items="@EmpNames"
-                              TOption="Option<String>"
-                              OptionText="(v => v.Text)"
-                              @bind-Value="@Input.FullName"
-                              Label="Full Name" />
+                <InputSelect @bind-Value="@Input.FullName">
+                @foreach(var name in (Names[]) Enum.GetValues(typeof(Names)))
+                {
+                    <option value="@name">@name.GetDisplayName()</option>
+                }
+                </InputSelect>
                 <FluentTextField Name="Input.Email" @bind-Value="Input.Email" AutoComplete="email" Required="true" Placeholder="name@example.com" Label="Email" Style="width: 100%" />
                 <FluentValidationMessage For="() => Input.Email" class="text-danger" />
                 <FluentTextField type="password" Name="Input.Password" @bind-Value="Input.Password" AutoComplete="new-password" Required="true" Placeholder="password" Label="Password" Style="width: 100%" />
@@ -63,18 +61,12 @@
     private string? ReturnUrl { get; set; }
 
     private string? Message => identityErrors is null ? null : $"Error: {string.Join(", ", identityErrors.Select(error => error.Description))}";
-    private void CheckSelector(object value)
-    {
-        Logger.LogDebug(value.ToString());
-    }
+
     public async Task RegisterUser(EditContext editContext)
     {
         var user = CreateUser();
-        //Employee employee = new() { FullName = Input.FullName };
-
-        //user.Employee.FullName =;
-        return;
-        await UserStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
+        user.Employee.FullName = Input.FullName;
+        await UserStore.SetUserNameAsync(user, Input.FullName.GetDisplayName(), CancellationToken.None);
         var emailStore = GetEmailStore();
         await emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
         var result = await UserManager.CreateAsync(user, Input.Password);
@@ -149,16 +141,7 @@
         [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
         public string ConfirmPassword { get; set; } = "";
 
-        [Display(Name = "Full Name")]
-        public String FullName { get; set; }
+        [Required, Display(Name = "Full Name")]
+        public Names FullName { get; set; }
     }
-
-    private static List<Option<String>>
-        EmpNames = new List<Option<String>>()
-            {
-            new(){ Value=Names.Vasyl.GetDisplayName(), Text=Names.Vasyl.GetDisplayName() },
-            new(){ Value=Names.Petro.GetDisplayName(), Text=Names.Petro.GetDisplayName() },
-            new(){ Value=Names.Volodymyr.GetDisplayName(), Text=Names.Volodymyr.GetDisplayName() },
-            new(){ Value=Names.Igor.GetDisplayName(), Text=Names.Igor.GetDisplayName() },
-            };
 }

@@ -20,8 +20,8 @@ namespace CRM.Models
         public Status Status { get; set; } = Status.Inactive;
         [Required, Display(Name = "Out-of-Office Balance")]
         public short Balance { get; set; } = 28;
-        public int PartnerId { get; set; }
-        public int ProjectId { get; set; }
+        public int? PartnerId { get; set; }
+        public int? ProjectId { get; set; }
         /// <summary>
         /// Navigation property
         /// </summary>

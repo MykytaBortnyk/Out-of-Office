@@ -19,7 +19,12 @@ namespace CRM.Data
             modelBuilder.Entity<Project>()
                 .HasMany(e => e.Employees)
                 .WithOne(e => e.Project)
-                .HasForeignKey(k => k.ProjectId).IsRequired(false);
+                .HasForeignKey(k => k.ProjectId);
+
+            modelBuilder.Entity<Employee>()
+                .HasOne(e => e.Project)
+                .WithMany(e => e.Employees)
+                .HasForeignKey(k => k.ProjectId);
         }
     }
 }

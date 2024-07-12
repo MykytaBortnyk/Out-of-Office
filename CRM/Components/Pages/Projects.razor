@@ -1,4 +1,6 @@
 ﻿@page "/projects"
+@rendermode InteractiveServer
+
 @using System.Globalization
 @inject IRepository _repository;
 @inject IDialogService DialogService;
@@ -14,7 +16,7 @@
 </FluentAnchor>
 <FluentDataGrid Items="@FilteredItems" ResizableColumns="true" Pagination="@pagination" TGridItem="Project">
     <PropertyColumn Property="@(p => p.Id)" Sortable="true" IsDefaultSortColumn=true />
-    <PropertyColumn Property="@(p => p.Type.GetDisplayName())" Title="Type" Sortable="true" SortBy="HandleSort<Project>(p => p.Type)" />
+    <PropertyColumn Property="@(p => p.Type)" Title="Type" Sortable="true" SortBy="HandleSort<Project>(p => p.Type)" />
     <PropertyColumn Property="@(p => p.StartDate.ToString("dd MMMM yyyy", CultureInfo.CreateSpecificCulture("en-UK")))" Title="Start date" Sortable="true" />
     <PropertyColumn Property="@(p => p.EndDate.ToString("dd MMMM yyyy", CultureInfo.CreateSpecificCulture("en-UK")))" Title="End date" Sortable="true" />
     <PropertyColumn Property="@(p => p.ProjectManager)" Sortable="true" Filtered="!string.IsNullOrWhiteSpace(nameFilter)" SortBy="@(HandleSort<Project>(p => p.ProjectManager.FullName))" Title="Manager">
@@ -24,7 +26,7 @@
             </div>
         </ColumnOptions>
     </PropertyColumn>
-    <PropertyColumn Property="@(p => p.Status.GetDisplayName())" Title="Status" Sortable="true" SortBy="HandleSort<Project>(p => p.Status)" />
+    <PropertyColumn Property="@(p => p.Status)" Title="Status" Sortable="true" SortBy="HandleSort<Project>(p => p.Status)" />
     <PropertyColumn Property="@(p => p.Comment)" Class="multiline-text" />
     <TemplateColumn Title="Actions" Align="Align.Center">
         <FluentAnchor Href="@($"/project/{context.Id}")"

@@ -1,4 +1,6 @@
 ﻿@page "/request/"
+@rendermode InteractiveServer
+
 @inject IRepository _repository
 @inject ILogger<RequestForm> _logger
 @inject NavigationManager Navigation
@@ -93,7 +95,7 @@
     private Option<AbsenceReason> selectedReason;
     private static List<Option<AbsenceReason>> reasonOptions = new()
     {
-        { new Option<AbsenceReason> { Value = AbsenceReason.HealthIssue, Text = AbsenceReason.HealthIssue.GetDisplayName() } },
+        { new Option<AbsenceReason> { Value = AbsenceReason.HealthIssue, Text = AbsenceReason.HealthIssue.GetDisplayName(), Selected = true } },
         { new Option<AbsenceReason> { Value = AbsenceReason.Vacation, Text = AbsenceReason.Vacation.GetDisplayName() } },
         { new Option<AbsenceReason> { Value = AbsenceReason.FamilyEmergancy, Text = AbsenceReason.FamilyEmergancy.GetDisplayName() } },
     };

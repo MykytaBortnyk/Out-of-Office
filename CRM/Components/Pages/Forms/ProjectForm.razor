@@ -1,4 +1,6 @@
 ﻿@page "/project/{Id:int?}"
+@rendermode InteractiveServer
+
 @inject IRepository _repository
 @inject ILogger<RequestForm> _logger
 @inject NavigationManager Navigation
@@ -53,8 +55,8 @@
     {
         try
         {
-            project = await _repository.Get<Project>(p => p.Id == Id).FirstOrDefaultAsync() ?? new();
-            managers = await _repository.Get<Employee>(e => e.Position == Positions.ProjectManager).ToListAsync();
+            project = await _repository.Get<Project>(p => p.Id == Id, null, true).FirstOrDefaultAsync() ?? new();
+            managers = await _repository.Get<Employee>(e => e.Position == Positions.ProjectManager, null, true).ToListAsync();
             SelectedDates = new List<DateTime>() { project.StartDate, project.EndDate };
         }
         catch (InvalidOperationException)

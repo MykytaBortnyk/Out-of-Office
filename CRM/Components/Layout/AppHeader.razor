@@ -1,0 +1,21 @@
+﻿<FluentProfileMenu @rendermode="RenderMode.InteractiveServer">
+    <StartTemplate>
+        @UserName
+    </StartTemplate>
+    <HeaderTemplate>
+        <FluentStack>
+            <FluentLabel Typo="Typography.H4">Out-of-Office account</FluentLabel>
+        </FluentStack>
+    </HeaderTemplate>
+    <ChildContent>
+        <FluentLabel>Hello, @FullName!</FluentLabel>
+    </ChildContent>
+    <FooterTemplate>
+        <FluentAnchor Href="/Account/Manage">Manage Account</FluentAnchor>
+    </FooterTemplate>
+</FluentProfileMenu>
+
+@code {
+    [Parameter] public String UserName { get; set; }
+    [Parameter] public String FullName { get; set; }
+}
