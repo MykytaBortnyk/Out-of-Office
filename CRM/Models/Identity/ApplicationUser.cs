@@ -6,10 +6,12 @@ namespace CRM.Models.Identity
 {
     public class ApplicationUser : IdentityUser<Guid>
     {
-        public virtual ICollection<ApplicationRole> UserRoles { get; set; }
+        public Guid UserRoleId { get; set; }
+        [Required, ForeignKey(nameof(UserRoleId))]
+        public virtual ApplicationRole UserRole { get; set; }
 
-        [Required, ForeignKey("EmployeeId")]
-        public Employee Employee { get; set; } = new();
+        [Required, ForeignKey(nameof(EmployeeId))]
+        public virtual Employee Employee { get; set; } = new();
         public int EmployeeId { get; set; }
     }
 }

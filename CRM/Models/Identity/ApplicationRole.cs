@@ -4,14 +4,6 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace CRM.Models.Identity
 {
-    public class ApplicationRole : IdentityRole<Guid>
-    {
-        public ApplicationRole()
-        {
-            Name = Employee.Position.GetDisplayName();
-        }
-        [ForeignKey("EmployeeId")]
-        public Employee Employee { get; set; }
-        public int EmployeeId { get; set; }
-    }
+    public class ApplicationRole : IdentityRole<Guid> { }
+    public class ApplicationUserRole : IdentityUserRole<Guid> { }
 }

@@ -65,6 +65,7 @@ builder.Services.AddDbContextFactory<IdentityContext>((s, opt) =>
 .UseLoggerFactory(s.GetRequiredService<ILoggerFactory>()));
 
 builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
+    .AddRoles<ApplicationRole>()
     .AddEntityFrameworkStores<IdentityContext>()
     .AddSignInManager()
     .AddDefaultTokenProviders();
