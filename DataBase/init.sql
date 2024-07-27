@@ -13,16 +13,16 @@ CREATE TYPE "AbsenceReason" AS ENUM ('Vacation', 'Health Issue', 'Family Emergan
 CREATE TYPE "RequestStatus" AS ENUM ('New', 'Approve', 'Reject');
 CREATE TYPE "ProjectType" AS ENUM ('SaaS', 'Fintech', 'Education', 'Gambling', 'Telecom');
 
-CREATE TABLE "Employees" (	
+CREATE TABLE "EmployeesTest" (	
 	"Id" BIGSERIAL primary key,
 	"FullName" "Names" NOT NULL,
 	"Subdivision" "Subd" NOT NULL,
-	"Position" "Positions" NOT NULL DEFAULT 'Employee' 
+	"Position" "Positions" NOT NULL DEFAULT 'Employee',
 	"Status" "Status" NOT NULL,
-	"PartnerId" int references "Employees"("Id"),
+	"PartnerId" int references "EmployeesTest"("Id") CONSTRAINT CHECK ("EmployeesTest"("PartnerId")."Position" = 'HR Manager'),
 	"Balance" smallint NOT NULL DEFAULT 28,
 	"ProjectId" INT,
-	FOREIGN KEY ("ProjectId") REFERENCES "Project"("Id")
+	FOREIGN KEY ("ProjectId") REFERENCES "Projects"("Id")
 );
 -- it's not possible to create first entry with NOT NULL, 
 -- so we have to change the constraint after first entry has been added
