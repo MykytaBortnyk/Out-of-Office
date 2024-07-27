@@ -58,11 +58,11 @@ builder.Services.AddAuthentication(options =>
     options.DefaultScheme = IdentityConstants.ApplicationScheme;
     options.DefaultSignInScheme = IdentityConstants.ExternalScheme;
 })
-    .AddIdentityCookies();
+.AddIdentityCookies();
 
 builder.Services.AddDbContextFactory<IdentityContext>((s, opt) =>
     opt.UseNpgsql(dataSource)
-.UseLoggerFactory(s.GetRequiredService<ILoggerFactory>()));
+    .UseLoggerFactory(s.GetRequiredService<ILoggerFactory>()));
 
 builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
     .AddRoles<ApplicationRole>()
